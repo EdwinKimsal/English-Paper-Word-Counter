@@ -5,14 +5,8 @@ import re
 # ===============================
 # USER INPUT
 # ===============================
-DOCX_FILE_PATH = "./Intro To Field/Kimsal_RoughDraft.docx"   # <-- your file path
-TOP_N = 5                                                    # <-- your choice of list length
-
-# ===============================
-# Load and extract text
-# ===============================
-doc = Document(DOCX_FILE_PATH)
-text = " ".join(p.text for p in doc.paragraphs)
+DOCX_FILE_PATH = ".text.docx"   # <-- your path
+TOP_N = 5                       # <-- length of lists
 
 # ===============================
 # Stop words (unigrams only)
@@ -32,24 +26,30 @@ EXCLUDED_WORDS = {"got", "very", "things", "stuff"}
 EXCLUDED_PHRASES = {"this is"}
 
 # ===============================
+# Load and extract text
+# ===============================
+doc = Document(DOCX_FILE_PATH)
+raw_text = " ".join(p.text for p in doc.paragraphs)
+
+# ===============================
 # Clean and tokenize text
 # ===============================
-text = text.lower()
-text = re.sub(r"[^a-z\s]", "", text)
+# Replace punctuation with spaces to preserve word boundaries
+text = raw_text.lower()
+text = re.sub(r"[^a-z\s]", " ", text)
 words = text.split()
 
 # ===============================
 # Generate n-grams
 # ===============================
-unigrams = words
 bigrams = [" ".join(bg) for bg in zip(words, words[1:])]
 trigrams = [" ".join(tg) for tg in zip(words, words[1:], words[2:])]
 
 # ===============================
-# Filter unigrams
+# Filter unigrams (exact word matching only)
 # ===============================
 filtered_unigrams = [
-    w for w in unigrams
+    w for w in words
     if w not in STOP_WORDS and w not in EXCLUDED_WORDS
 ]
 
@@ -76,17 +76,22 @@ for phrase, count in trigram_counts.most_common(TOP_N):
     print(f"{phrase}: {count}")
 
 # ===============================
-# Display excluded-word counts (iff present)
+# Display excluded-word / phrase counts (iff present)
 # ===============================
 print("\nExcluded Word / Phrase Counts:")
 
-excluded_word_counts = Counter(w for w in unigrams if w in EXCLUDED_WORDS)
+excluded_word_counts = Counter(
+    w for w in words if w in EXCLUDED_WORDS
+)
+
 excluded_phrase_counts = Counter(
     bg for bg in bigrams if bg in EXCLUDED_PHRASES
 )
 
-for word, count in excluded_word_counts.items():
-    print(f"{word}: {count}")
+for word in EXCLUDED_WORDS:
+    if excluded_word_counts[word] > 0:
+        print(f"{word}: {excluded_word_counts[word]}")
 
-for phrase, count in excluded_phrase_counts.items():
-    print(f"{phrase}: {count}")
+for phrase in EXCLUDED_PHRASES:
+    if excluded_phrase_counts[phrase] > 0:
+        print(f"{phrase}: {excluded_phrase_counts[phrase]}")
