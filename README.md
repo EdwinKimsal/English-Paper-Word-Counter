@@ -8,6 +8,7 @@ This Python script analyzes a `.docx` file and finds the most frequently used wo
 - Counts **three-word phrases (trigrams)**
 - Case-insensitive
 - Removes punctuation
+- Lists a list of words that should not be used
 
 ## Requirements
 - Python 3.x
