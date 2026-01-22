@@ -3,10 +3,10 @@ from collections import Counter
 import re
 
 # ===============================
-# USER INPUT (relative file path and top count)
+# USER INPUT
 # ===============================
-DOCX_FILE_PATH = ".text.docx"   # <-- change this
-TOP_N = 5
+DOCX_FILE_PATH = "./Intro To Field/Kimsal_RoughDraft.docx"   # <-- your file path
+TOP_N = 5                                                    # <-- your choice of list length
 
 # ===============================
 # Load and extract text
@@ -26,38 +26,43 @@ STOP_WORDS = {
 }
 
 # ===============================
+# Custom exclusions
+# ===============================
+EXCLUDED_WORDS = {"got", "very", "things", "stuff"}
+EXCLUDED_PHRASES = {"this is"}
+
+# ===============================
 # Clean and tokenize text
 # ===============================
-# Convert to lowercase and keep only letters and spaces
 text = text.lower()
 text = re.sub(r"[^a-z\s]", "", text)
-
 words = text.split()
 
 # ===============================
 # Generate n-grams
 # ===============================
 unigrams = words
-bigrams = zip(words, words[1:])
-trigrams = zip(words, words[1:], words[2:])
+bigrams = [" ".join(bg) for bg in zip(words, words[1:])]
+trigrams = [" ".join(tg) for tg in zip(words, words[1:], words[2:])]
 
 # ===============================
-# Count frequencies
+# Filter unigrams
 # ===============================
-# Filter stop words ONLY for unigrams
-filtered_unigrams = [w for w in unigrams if w not in STOP_WORDS]
+filtered_unigrams = [
+    w for w in unigrams
+    if w not in STOP_WORDS and w not in EXCLUDED_WORDS
+]
 
 # ===============================
 # Count frequencies
 # ===============================
 unigram_counts = Counter(filtered_unigrams)
-bigram_counts = Counter([" ".join(bg) for bg in bigrams])
-trigram_counts = Counter([" ".join(tg) for tg in trigrams])
+bigram_counts = Counter(bg for bg in bigrams if bg not in EXCLUDED_PHRASES)
+trigram_counts = Counter(trigrams)
 
 # ===============================
 # Display results
 # ===============================
-
 print("\nTop Unigrams:")
 for word, count in unigram_counts.most_common(TOP_N):
     print(f"{word}: {count}")
@@ -68,4 +73,20 @@ for phrase, count in bigram_counts.most_common(TOP_N):
 
 print("\nTop Trigrams:")
 for phrase, count in trigram_counts.most_common(TOP_N):
+    print(f"{phrase}: {count}")
+
+# ===============================
+# Display excluded-word counts (iff present)
+# ===============================
+print("\nExcluded Word / Phrase Counts:")
+
+excluded_word_counts = Counter(w for w in unigrams if w in EXCLUDED_WORDS)
+excluded_phrase_counts = Counter(
+    bg for bg in bigrams if bg in EXCLUDED_PHRASES
+)
+
+for word, count in excluded_word_counts.items():
+    print(f"{word}: {count}")
+
+for phrase, count in excluded_phrase_counts.items():
     print(f"{phrase}: {count}")
